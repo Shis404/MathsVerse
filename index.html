@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MathVerse - Advanced Mathematical & Physical Graphing Engine</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#0f172a',
+                            850: '#0b1120',
+                            900: '#070d18',
+                            950: '#04070f'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- KaTeX for High-Fidelity Mathematical Typesetting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+    <!-- Math.js for High-Precision Symbolic & Numerical Math Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.js"></script>
+
+    <!-- Plotly.js for 2D, 3D WebGL Surfaces, and Vector Visualizations -->
+    <script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Blueprint Mathematical Grid Background */
+        .math-grid-blueprint {
+            background-color: #04070f;
+            background-image: 
+                linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                linear-gradient(to right, rgba(56, 189, 248, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.015) 1px, transparent 1px);
+            background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+        }
+
+        /* Custom Engineered Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070d18;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+
+        /* High-Visibility Custom Range Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #1e293b;
+            height: 6px;
+            border-radius: 4px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+            border: 2px solid #070d18;
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #7dd3fc;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            border: 2px solid #070d18;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            animation: slideUpFade 0.25s ease forwards;
+        }
+        @keyframes slideUpFade {
+            from { transform: translateY(12px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Pure Black Themed Header Preset Selector */
+        #headerPresetContainer {
+            background-color: #000000 !important;
+        }
+        #headerPresetSelect {
+            background-color: #000000 !important;
+            color: #38bdf8 !important;
+        }
+        #headerPresetSelect option,
+        #headerPresetSelect optgroup {
+            background-color: #050505 !important;
+            color: #e2e8f0 !important;
+        }
+        select option {
+            background-color: #070d18;
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-slate-100 font-sans h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- Top Engineering Navigation Bar -->
+    <header class="h-14 border-b border-cyan-500/20 bg-navy-900/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0 z-30">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center text-cyan-400 font-mono font-bold shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                ∇
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-bold text-base tracking-tight text-slate-100 font-mono flex items-center gap-1.5">
+                        MathVerse <span class="text-xs px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-400/30">v3.5</span>
+                    </h1>
+                </div>
+                <p class="text-[10px] text-slate-400 hidden sm:block font-mono">Calculus, 3D Surfaces & Physics Fields</p>
+            </div>
+        </div>
+
+        <!-- Center Controls: Mobile View Segmented Switcher & Mode Badges -->
+        <div class="flex items-center gap-2">
+            <!-- Mobile Toggle: Sidebar vs Graph -->
+            <div class="flex md:hidden bg-navy-950 p-1 rounded-xl border border-slate-700/70">
+                <button id="viewTabEqu" onclick="setMobileView('equ')" class="px-3 py-1 text-xs font-mono rounded-lg transition-all bg-cyan-500 text-navy-950 font-bold shadow-sm">
+                    Inputs
+                </button>
+                <button id="viewTabGraph" onclick="setMobileView('graph')" class="px-3 py-1 text-xs font-mono rounded-lg transition-all text-slate-300 font-medium">
+                    Graph
+                </button>
+            </div>
+
+            <!-- Quick Preset Switcher in Header (Pitch Black Themed) -->
+            <div id="headerPresetContainer" class="hidden lg:flex items-center gap-2 bg-black px-3 py-1.5 rounded-xl border border-neutral-800 shadow-[0_0_20px_rgba(0,0,0,0.9)]">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span class="text-[11px] font-mono text-slate-400 font-semibold">Preset:</span>
+                <select id="headerPresetSelect" onchange="loadSelectedPreset(this.value)" class="bg-black text-xs font-mono text-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 cursor-pointer rounded-lg px-2 py-1 border border-neutral-800 hover:border-neutral-700 transition-colors" style="background-color: #000000; color: #38bdf8;">
+                    <optgroup label="🪐 Physics & Fields" class="bg-black text-slate-400 font-semibold" style="background-color: #000000; color: #94a3b8;">
+                        <option value="traveling_wave">🌊 Traveling Wavepacket</option>
+                        <option value="gravity_field">🪐 Gravitational Inward Field</option>
+                        <option value="spacetime_well">🌌 Spacetime Gravitational Well</option>
+                        <option value="electric_dipole">⚡ Electric Dipole Field</option>
+                        <option value="standing_wave">🎸 Resonant Standing Wave</option>
+                        <option value="vector_vortex">🌪️ Vector Field Vortex</option>
+                        <option value="damped_harmonic">⚡ Damped Oscillator</option>
+                    </optgroup>
+                    <optgroup label="📐 Pure Math & Foliations" class="bg-black text-slate-400 font-semibold" style="background-color: #000000; color: #94a3b8;">
+                        <option value="polar_rose">🌸 Polar Rose: r = cos(a·θ - t)</option>
+                        <option value="cardioid">❤️ Polar Cardioid: r = a(1 - cos θ)</option>
+                        <option value="archimedes_spiral">🌀 Archimedean Spiral: r = a·θ</option>
+                        <option value="saddle_3d">🏔️ 3D Saddle Surface</option>
+                        <option value="sombrero_3d">🌀 3D Wave Sinc Hat</option>
+                        <option value="riemann_integral">📐 Definite Integration</option>
+                        <option value="tangent_curve">📐 Tangent & Curvature</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <!-- Right Header Actions -->
+        <div class="flex items-center gap-2">
+            <button onclick="toggleHelpModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-colors border border-slate-700">
+                <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Syntax Help</span>
+            </button>
+            <button onclick="exportGraphHighRes()" class="px-2.5 py-1.5 rounded-lg bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-300 text-xs font-mono flex items-center gap-1.5 transition-colors border border-cyan-500/40">
+                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Export PNG</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Application Workspace -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- Left Controls Sidebar -->
+        <aside id="controlsSidebar" class="w-full md:w-[390px] lg:w-[430px] border-r border-slate-800 bg-navy-900/95 flex flex-col overflow-y-auto shrink-0 z-20 transition-all duration-300">
+            <div class="p-4 space-y-4">
+
+                <!-- Curated Math & Physics Presets Card (Visible & Prominent) -->
+                <div class="p-3.5 bg-gradient-to-br from-navy-850 to-navy-950 rounded-2xl border border-cyan-500/30 shadow-lg space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-mono uppercase tracking-wider text-cyan-300 font-bold flex items-center gap-1.5">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> Physics & Pure Math Presets
+                        </label>
+                        <span class="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700">1-Tap Load</span>
+                    </div>
+
+                    <!-- Dropdown Selector -->
+                    <select id="presetSelector" onchange="loadSelectedPreset(this.value)" class="w-full bg-navy-900 border border-cyan-500/40 rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 focus:border-cyan-400 focus:outline-none shadow-inner">
+                        <optgroup label="🪐 Physics & Fields" class="bg-navy-950 text-slate-300 font-semibold">
+                            <option value="traveling_wave" selected>🌊 Traveling Gaussian Wavepacket (Physics)</option>
+                            <option value="gravity_field">🪐 Gravitational Inward Field (Inverse-Square Law)</option>
+                            <option value="spacetime_well">🌌 Spacetime Gravitational Well (General Relativity 3D)</option>
+                            <option value="electric_dipole">⚡ Electric Dipole Field Lines (Electromagnetism)</option>
+                            <option value="standing_wave">🎸 Resonant Standing Wave Harmonics (Acoustics)</option>
+                            <option value="damped_harmonic">⚡ Damped Harmonic Oscillator (Physics)</option>
+                            <option value="vector_vortex">🌪️ Vector Field / Vortex Circulation</option>
+                        </optgroup>
+                        <optgroup label="📐 Pure Math & Foliations" class="bg-navy-950 text-slate-300 font-semibold">
+                            <option value="polar_rose">🌸 Polar Rose: r(θ) = cos(a·θ - t)</option>
+                            <option value="cardioid">❤️ Polar Cardioid: r(θ) = a·(1 - cos θ)</option>
+                            <option value="archimedes_spiral">🌀 Archimedean Spiral: r(θ) = a·θ</option>
+                            <option value="saddle_3d">🏔️ 3D Hyperbolic Paraboloid / Saddle</option>
+                            <option value="sombrero_3d">🌀 3D Wave Ripple / Mexican Hat (2D Sinc)</option>
+                            <option value="riemann_integral">📐 Definite Integration with Area Shading</option>
+                            <option value="tangent_curve">📐 Tangent Line & Curvature Analysis</option>
+                        </optgroup>
+                    </select>
+
+                    <!-- Quick Preset Pill Chips for Instant Tapping -->
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <button onclick="loadSelectedPreset('traveling_wave')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-cyan-950 border border-cyan-500/30 text-cyan-300 transition-colors">🌊 Wave</button>
+                        <button onclick="loadSelectedPreset('gravity_field')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-amber-950 border border-amber-500/30 text-amber-300 transition-colors">🪐 Gravity</button>
+                        <button onclick="loadSelectedPreset('spacetime_well')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-purple-950 border border-purple-500/30 text-purple-300 transition-colors">🌌 Spacetime</button>
+                        <button onclick="loadSelectedPreset('polar_rose')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-pink-950 border border-pink-500/30 text-pink-300 transition-colors">🌸 Polar</button>
+                        <button onclick="loadSelectedPreset('electric_dipole')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-blue-950 border border-blue-500/30 text-blue-300 transition-colors">⚡ Dipole</button>
+                        <button onclick="loadSelectedPreset('standing_wave')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-emerald-950 border border-emerald-500/30 text-emerald-300 transition-colors">🎸 Standing</button>
+                        <button onclick="loadSelectedPreset('saddle_3d')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-pink-950 border border-pink-500/30 text-pink-300 transition-colors">🏔️ Saddle 3D</button>
+                        <button onclick="loadSelectedPreset('riemann_integral')" class="px-2 py-1 text-[10px] font-mono rounded-lg bg-navy-900 hover:bg-indigo-950 border border-indigo-500/30 text-indigo-300 transition-colors">📐 Integral</button>
+                    </div>
+                </div>
+
+                <!-- Equation Mode Selector Tabs -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i> Coordinate & System Mode
+                    </label>
+                    <div class="grid grid-cols-6 gap-1 bg-navy-950 p-1 rounded-xl border border-slate-800 text-center">
+                        <button onclick="setGraphMode('2d')" id="tabBtn2d" class="py-1.5 rounded-lg text-xs font-mono font-medium transition-colors bg-cyan-500 text-navy-950 font-bold">2D</button>
+                        <button onclick="setGraphMode('3d')" id="tabBtn3d" class="py-1.5 rounded-lg text-xs font-mono font-medium transition-colors text-slate-400 hover:text-slate-200">3D</button>
+                        <button onclick="setGraphMode('polar')" id="tabBtnPolar" class="py-1.5 rounded-lg text-xs font-mono font-medium transition-colors text-slate-400 hover:text-slate-200">Polar</button>
+                        <button onclick="setGraphMode('calculus')" id="tabBtnCalculus" class="py-1.5 rounded-lg text-xs font-mono font-medium transition-colors text-slate-400 hover:text-slate-200">d/dx</button>
+                        <button onclick="setGraphMode('integral')" id="tabBtnIntegral" class="py-1.5 rounded-lg text-xs font-mono font-medium transition-colors text-slate-400 hover:text-slate-200">∫ dx</button>
+                        <button onclick="setGraphMode('vector')" id="tabBtnVector" class="py-1.5 rounded-lg text-xs font-mono font-medium transition-colors text-slate-400 hover:text-slate-200">Vector</button>
+                    </div>
+                </div>
+
+                <!-- Primary Equation Input Block -->
+                <div class="p-3.5 bg-navy-850 rounded-2xl border border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label id="equationInputLabel" class="text-xs font-mono text-cyan-400 font-bold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span> f(x) =
+                        </label>
+                        <span class="text-[10px] font-mono text-slate-500">LaTeX Preview</span>
+                    </div>
+
+                    <div class="relative">
+                        <input type="text" id="primaryEquationInput" value="sin(a * x - t) * exp(-b * x^2)" oninput="handleEquationChange()" class="w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400">
+                    </div>
+
+                    <!-- Secondary Equation Input (Used for Vector Fields F_y(x,y)) -->
+                    <div id="secondaryEquationContainer" class="hidden space-y-1 pt-1">
+                        <label class="text-xs font-mono text-purple-400 font-bold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-purple-400"></span> F_y(x, y) =
+                        </label>
+                        <input type="text" id="secondaryEquationInput" value="-a * y / ((x^2 + y^2 + 0.25)^1.5)" oninput="handleEquationChange()" class="w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-400">
+                    </div>
+
+                    <!-- Live KaTeX Formatted Math Display -->
+                    <div id="katexPreviewArea" class="bg-navy-950/80 p-2.5 rounded-xl border border-slate-800/80 min-h-[38px] flex items-center justify-center text-cyan-300 font-mono text-sm overflow-x-auto">
+                    </div>
+
+                    <!-- Virtual Math Keypad -->
+                    <div class="pt-1">
+                        <div class="flex items-center justify-between pb-1">
+                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Quick Math Keys</span>
+                            <span class="text-[10px] font-mono text-slate-500">Tap to insert</span>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1">
+                            <button onclick="insertSymbol('sin(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">sin</button>
+                            <button onclick="insertSymbol('cos(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">cos</button>
+                            <button onclick="insertSymbol('tan(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">tan</button>
+                            <button onclick="insertSymbol('exp(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">exp</button>
+                            <button onclick="insertSymbol('sqrt(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">√</button>
+                            <button onclick="insertSymbol('^2')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">x²</button>
+                            <button onclick="insertSymbol('theta')" class="p-1.5 bg-navy-950 hover:bg-pink-900/50 border border-pink-500/40 rounded-lg text-xs font-mono text-pink-300 font-bold">θ</button>
+                            <button onclick="insertSymbol('pi')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">π</button>
+                            <button onclick="insertSymbol('ln(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">ln</button>
+                            <button onclick="insertSymbol('abs(')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">|x|</button>
+                            <button onclick="insertSymbol(' / ')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">÷</button>
+                            <button onclick="insertSymbol(' * ')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">×</button>
+                            <button onclick="insertSymbol(' + ')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">+</button>
+                            <button onclick="insertSymbol(' - ')" class="p-1.5 bg-navy-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">−</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Parameters & Physics Time Engine -->
+                <div class="p-3.5 bg-navy-850 rounded-2xl border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+                            <i data-lucide="play-circle" class="w-3.5 h-3.5 text-cyan-400"></i> Parameters & Animation
+                        </label>
+                        <!-- Master Play / Pause Toggle -->
+                        <button id="masterAnimBtn" onclick="toggleAnimation()" class="px-3 py-1 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-navy-950 font-bold text-xs font-mono flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(56,189,248,0.3)]">
+                            <i id="animPlayIcon" data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                            <span id="animBtnText">Animate (t)</span>
+                        </button>
+                    </div>
+
+                    <!-- Parameter Slider: a -->
+                    <div class="space-y-1 bg-navy-950/70 p-2.5 rounded-xl border border-slate-800">
+                        <div class="flex items-center justify-between text-xs font-mono">
+                            <span class="text-cyan-400 font-bold">Parameter a</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="num_a" value="1.8" step="0.05" oninput="updateParamFromNumber('a', this.value)" class="w-16 bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-cyan-300 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                        <input type="range" id="slider_a" min="-5" max="5" step="0.05" value="1.8" oninput="updateParamFromSlider('a', this.value)" class="w-full">
+                    </div>
+
+                    <!-- Parameter Slider: b -->
+                    <div class="space-y-1 bg-navy-950/70 p-2.5 rounded-xl border border-slate-800">
+                        <div class="flex items-center justify-between text-xs font-mono">
+                            <span class="text-purple-400 font-bold">Parameter b</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="num_b" value="0.25" step="0.02" oninput="updateParamFromNumber('b', this.value)" class="w-16 bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-purple-300 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                        <input type="range" id="slider_b" min="0.01" max="3" step="0.02" value="0.25" oninput="updateParamFromSlider('b', this.value)" class="w-full">
+                    </div>
+
+                    <!-- Time Variable: t -->
+                    <div class="space-y-1 bg-navy-950/70 p-2.5 rounded-xl border border-slate-800">
+                        <div class="flex items-center justify-between text-xs font-mono">
+                            <span class="text-amber-400 font-bold flex items-center gap-1">
+                                <i data-lucide="clock" class="w-3 h-3 text-amber-400"></i> Time t (s)
+                            </span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="num_t" value="0.00" step="0.05" oninput="updateParamFromNumber('t', this.value)" class="w-16 bg-navy-900 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-amber-300 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                        <input type="range" id="slider_t" min="0" max="25" step="0.05" value="0.0" oninput="updateParamFromSlider('t', this.value)" class="w-full">
+                    </div>
+
+                    <!-- Animation Speed Selector -->
+                    <div class="flex items-center justify-between pt-1 text-[11px] font-mono text-slate-400">
+                        <span>Speed:</span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="setAnimSpeed(0.5)" id="speed05" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">0.5x</button>
+                            <button onclick="setAnimSpeed(1.0)" id="speed10" class="px-2 py-0.5 rounded bg-cyan-500 text-navy-950 font-bold">1x</button>
+                            <button onclick="setAnimSpeed(2.0)" id="speed20" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">2x</button>
+                            <button onclick="resetTimeParam()" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">Reset t</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculus & Tangent Inspector (Visible in Calculus Mode) -->
+                <div id="calculusControlsCard" class="hidden p-3.5 bg-navy-850 rounded-2xl border border-slate-800 space-y-2.5">
+                    <label class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1.5">
+                        <i data-lucide="compass" class="w-3.5 h-3.5"></i> Tangent Line & Curvature Inspector
+                    </label>
+                    <div class="space-y-1 bg-navy-950 p-2.5 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-mono">
+                            <span class="text-slate-300">Evaluation Point x₀:</span>
+                            <span id="tangentPointVal" class="text-emerald-400 font-bold">1.00</span>
+                        </div>
+                        <input type="range" id="tangentSlider" min="-5" max="5" step="0.05" value="1.0" oninput="updateTangentX(this.value)" class="w-full">
+                    </div>
+                    <div id="tangentInspectorHUD" class="bg-navy-950/90 p-2.5 rounded-xl border border-emerald-500/20 text-xs font-mono space-y-1 text-slate-300">
+                        <div>Slope m = f'(x₀): <span id="tangentSlopeVal" class="text-emerald-400 font-bold">0.00</span></div>
+                        <div>Curvature κ: <span id="tangentCurvatureVal" class="text-cyan-400 font-bold">0.00</span></div>
+                    </div>
+                </div>
+
+                <!-- Polar Coordinates & Foliation Inspector (Visible in Polar Mode) -->
+                <div id="polarControlsCard" class="hidden p-3.5 bg-navy-850 rounded-2xl border border-pink-500/30 space-y-2.5 shadow-lg">
+                    <label class="text-xs font-mono uppercase tracking-wider text-pink-400 font-bold flex items-center gap-1.5">
+                        <i data-lucide="compass" class="w-3.5 h-3.5 text-pink-400"></i> Polar Foliation & Radial Domain
+                    </label>
+                    <div class="space-y-1 bg-navy-950 p-2.5 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-mono">
+                            <span class="text-slate-300">Angular Span θ_max:</span>
+                            <span id="polarThetaVal" class="text-pink-400 font-bold">2π (360°)</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 pt-1">
+                            <button onclick="setPolarThetaMax(Math.PI)" id="polarSpanPi" class="py-1 px-1 text-[10px] font-mono rounded bg-slate-800 text-slate-300">π</button>
+                            <button onclick="setPolarThetaMax(2*Math.PI)" id="polarSpan2Pi" class="py-1 px-1 text-[10px] font-mono rounded bg-pink-500 text-navy-950 font-bold">2π</button>
+                            <button onclick="setPolarThetaMax(4*Math.PI)" id="polarSpan4Pi" class="py-1 px-1 text-[10px] font-mono rounded bg-slate-800 text-slate-300">4π</button>
+                            <button onclick="setPolarThetaMax(6*Math.PI)" id="polarSpan6Pi" class="py-1 px-1 text-[10px] font-mono rounded bg-slate-800 text-slate-300">6π</button>
+                        </div>
+                    </div>
+                    <div class="space-y-1 bg-navy-950 p-2.5 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-mono">
+                            <span class="text-slate-300">Radial Limit r_max:</span>
+                            <span id="polarRadiusVal" class="text-pink-400 font-bold">3.00</span>
+                        </div>
+                        <input type="range" id="polarRadiusSlider" min="0.5" max="10" step="0.25" value="3.0" oninput="updatePolarRadius(this.value)" class="w-full">
+                    </div>
+                </div>
+
+                <!-- Definite Integral Bounds (Visible in Integral Mode) -->
+                <div id="integralControlsCard" class="hidden p-3.5 bg-navy-850 rounded-2xl border border-slate-800 space-y-2.5">
+                    <label class="text-xs font-mono uppercase tracking-wider text-indigo-400 font-bold flex items-center gap-1.5">
+                        <i data-lucide="sigma" class="w-3.5 h-3.5"></i> Definite Integration Limits [a, b]
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-navy-950 p-2 rounded-xl border border-slate-800">
+                            <span class="text-[10px] font-mono text-slate-400">Lower Limit a:</span>
+                            <input type="number" id="integralBoundA" value="-2.0" step="0.1" onchange="updateIntegralBounds()" class="w-full bg-transparent text-sm font-mono text-indigo-300 focus:outline-none">
+                        </div>
+                        <div class="bg-navy-950 p-2 rounded-xl border border-slate-800">
+                            <span class="text-[10px] font-mono text-slate-400">Upper Limit b:</span>
+                            <input type="number" id="integralBoundB" value="2.0" step="0.1" onchange="updateIntegralBounds()" class="w-full bg-transparent text-sm font-mono text-indigo-300 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="bg-navy-950/90 p-2.5 rounded-xl border border-indigo-500/20 text-xs font-mono text-slate-300">
+                        Computed Area ∫ f(x) dx: <span id="integralResultVal" class="text-indigo-400 font-bold">0.000</span>
+                    </div>
+                </div>
+
+                <!-- Primary Action Button -->
+                <button onclick="applyAndPlot()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-navy-950 font-bold font-mono rounded-xl transition-all shadow-[0_0_20px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span>Compute & Render Graph</span>
+                </button>
+
+            </div>
+        </aside>
+
+        <!-- Right Interactive Graph Viewport Area -->
+        <main id="graphViewportArea" class="flex-1 h-full relative overflow-hidden bg-navy-950 math-grid-blueprint flex flex-col">
+
+            <!-- Floating Top Graph Toolbar -->
+            <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+                <!-- Current Function HUD Badge -->
+                <div class="pointer-events-auto bg-navy-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-cyan-500/30 text-xs font-mono shadow-lg flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></div>
+                    <span id="canvasHUDFormula" class="text-cyan-300 font-bold truncate max-w-[200px] sm:max-w-[340px]">f(x) = sin(a*x - t)*exp(-b*x^2)</span>
+                </div>
+
+                <!-- Floating Canvas Navigation Actions -->
+                <div class="pointer-events-auto flex items-center gap-1.5 bg-navy-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-700/80 shadow-lg">
+                    <!-- Zoom In -->
+                    <button onclick="handleZoomCanvas(0.8)" title="Zoom In" class="w-8 h-8 rounded-lg bg-navy-950 hover:bg-slate-800 text-slate-200 flex items-center justify-center border border-slate-800 transition-colors">
+                        <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                    </button>
+                    <!-- Zoom Out -->
+                    <button onclick="handleZoomCanvas(1.25)" title="Zoom Out" class="w-8 h-8 rounded-lg bg-navy-950 hover:bg-slate-800 text-slate-200 flex items-center justify-center border border-slate-800 transition-colors">
+                        <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                    </button>
+                    <!-- Pan Mode Toggle -->
+                    <button id="panToggleBtn" onclick="togglePanMode()" title="Toggle Pan Drag" class="w-8 h-8 rounded-lg bg-navy-950 hover:bg-slate-800 text-slate-200 flex items-center justify-center border border-slate-800 transition-colors">
+                        <i data-lucide="move" class="w-4 h-4"></i>
+                    </button>
+                    <!-- Reset View / Camera -->
+                    <button onclick="resetPlotCamera()" title="Reset Camera View" class="w-8 h-8 rounded-lg bg-navy-950 hover:bg-slate-800 text-cyan-400 flex items-center justify-center border border-slate-800 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3D Surface Camera Toolbar (Appears dynamically in 3D mode) -->
+            <div id="toolbar3DControls" class="hidden absolute top-14 right-3 z-10 flex flex-col gap-1.5 bg-navy-900/90 backdrop-blur-md p-1.5 rounded-xl border border-purple-500/30 shadow-xl">
+                <span class="text-[9px] font-mono text-purple-300 font-bold uppercase tracking-wider text-center">3D View</span>
+                <div class="grid grid-cols-2 gap-1">
+                    <button onclick="set3DViewPreset('iso')" class="px-2 py-1 bg-navy-950 hover:bg-slate-800 text-[10px] font-mono text-slate-300 rounded border border-slate-800">Iso</button>
+                    <button onclick="set3DViewPreset('top')" class="px-2 py-1 bg-navy-950 hover:bg-slate-800 text-[10px] font-mono text-slate-300 rounded border border-slate-800">Top</button>
+                    <button onclick="set3DViewPreset('front')" class="px-2 py-1 bg-navy-950 hover:bg-slate-800 text-[10px] font-mono text-slate-300 rounded border border-slate-800">Front</button>
+                    <button onclick="set3DViewPreset('side')" class="px-2 py-1 bg-navy-950 hover:bg-slate-800 text-[10px] font-mono text-slate-300 rounded border border-slate-800">Side</button>
+                </div>
+                <!-- 3D Auto-Spin Turntable Toggle -->
+                <button id="autoSpinBtn" onclick="toggle3DAutoRotate()" class="w-full py-1 bg-purple-900/40 hover:bg-purple-800/60 text-purple-300 font-mono text-[10px] rounded border border-purple-500/40 flex items-center justify-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                    <span>Auto Spin</span>
+                </button>
+            </div>
+
+            <!-- Dedicated Plotly Mount Container -->
+            <div id="plotContainerWrapper" class="absolute inset-0 w-full h-full block">
+                <div id="plotContainer" class="w-full h-full"></div>
+            </div>
+
+            <!-- Loading Spinner Overlay -->
+            <div id="plotLoaderSpinner" class="absolute inset-0 bg-navy-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 pointer-events-none transition-opacity duration-300">
+                <div class="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                <span class="mt-3 text-xs font-mono text-cyan-300 font-bold">Initializing Mathematical Coordinate Engine...</span>
+            </div>
+
+            <!-- Floating Mobile HUD Quick Controls (Visible on mobile) -->
+            <div id="mobileQuickHUD" class="md:hidden absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between gap-2 bg-navy-900/90 backdrop-blur-md p-2 rounded-xl border border-cyan-500/30 shadow-xl pointer-events-auto">
+                <button onclick="toggleAnimation()" class="px-3 py-1.5 bg-cyan-500 text-navy-950 font-bold font-mono text-xs rounded-lg flex items-center gap-1">
+                    <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                    <span>Play (t)</span>
+                </button>
+                <div class="flex items-center gap-1.5 flex-1 max-w-[180px]">
+                    <span class="text-[10px] font-mono text-cyan-300">a:</span>
+                    <input type="range" id="mobile_slider_a" min="-5" max="5" step="0.05" value="1.8" oninput="updateParamFromSlider('a', this.value)" class="w-full">
+                </div>
+                <button onclick="setMobileView('equ')" class="px-2.5 py-1.5 bg-navy-950 border border-slate-700 text-slate-200 font-mono text-xs rounded-lg">
+                    Edit
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Blueprint Footer Attribution Bar with "SNEHASHIS" -->
+    <footer class="border-t border-cyan-500/15 bg-navy-950 px-4 py-2 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-400 z-30 shrink-0">
+        <div class="flex items-center gap-3">
+            <span class="text-cyan-400 font-bold">∇ MathVerse Engine</span>
+            <span class="hidden sm:inline text-slate-600">|</span>
+            <span class="hidden sm:inline">Calculus, 3D Surfaces & Physics Fields</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-cyan-400 font-extrabold tracking-widest font-mono text-xs px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_8px_rgba(56,189,248,0.2)]">SNEHASHIS</span>
+        </div>
+    </footer>
+
+    <!-- Mathematical Help Modal -->
+    <div id="mathHelpModal" class="hidden fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-navy-900 border border-cyan-500/30 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-mono font-bold text-cyan-300 flex items-center gap-2">
+                    <i data-lucide="book-open" class="w-4 h-4 text-cyan-400"></i> Mathematical Syntax & Physics Guide
+                </h3>
+                <button onclick="toggleHelpModal()" class="text-slate-400 hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="text-xs font-mono space-y-2 text-slate-300 max-h-80 overflow-y-auto pr-1">
+                <p class="text-slate-400">MathVerse parses complete algebraic expressions, trigonometric functions, exponents, and calculus limits:</p>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div class="bg-navy-950 p-2 rounded-lg border border-slate-800">
+                        <span class="text-cyan-300 font-bold">Wavepackets:</span>
+                        <div class="text-[11px] text-slate-400">sin(a*x - t) * exp(-b*x^2)</div>
+                    </div>
+                    <div class="bg-navy-950 p-2 rounded-lg border border-slate-800">
+                        <span class="text-cyan-300 font-bold">Gravity Field F_x:</span>
+                        <div class="text-[11px] text-slate-400">-a*x / (x^2 + y^2 + 0.25)^1.5</div>
+                    </div>
+                    <div class="bg-navy-950 p-2 rounded-lg border border-slate-800">
+                        <span class="text-cyan-300 font-bold">Spacetime Well 3D:</span>
+                        <div class="text-[11px] text-slate-400">-a / (sqrt(x^2 + y^2) + 0.35)</div>
+                    </div>
+                    <div class="bg-navy-950 p-2 rounded-lg border border-slate-800">
+                        <span class="text-cyan-300 font-bold">3D Saddle Surface:</span>
+                        <div class="text-[11px] text-slate-400">x^2 / a^2 - y^2 / b^2</div>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-slate-800 flex justify-end">
+                <button onclick="toggleHelpModal()" class="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-navy-950 font-mono font-bold text-xs">
+                    Got it
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Element -->
+    <div id="toastContainer" class="fixed bottom-12 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        /* Global Engine State */
+        const state = {
+            mode: '2d',
+            equation: 'sin(a * x - t) * exp(-b * x^2)',
+            secondaryEquation: '-a * y / ((x^2 + y^2 + 0.25)^1.5)',
+            params: {
+                a: 1.8,
+                b: 0.25,
+                c: 1.0,
+                t: 0.0
+            },
+            animation: {
+                running: false,
+                target: 't',
+                speed: 1.0,
+                direction: 1,
+                animFrameId: null
+            },
+            tangentX: 1.0,
+            integralBounds: { a: -2.0, b: 2.0 },
+            polarThetaMax: 2 * Math.PI,
+            polarMaxR: 3.0,
+            domain: { min: -6.0, max: 6.0 },
+            yDomain: [-2.5, 2.5],
+            zDomain: [-3.0, 3.0],
+            samples: 360,
+            dragMode: 'pan',
+            isCustomZoomed: false,
+            currentViewRange: null,
+            camera3D: {
+                eye: { x: 1.55, y: 1.55, z: 1.25 },
+                up: { x: 0, y: 0, z: 1 },
+                center: { x: 0, y: 0, z: 0 }
+            },
+            scene3DDragMode: 'orbit',
+            autoRotate3D: false,
+            autoRotateAngle: 0.785,
+            autoRotateRadius: 2.2,
+            autoRotateAnimId: null,
+            cachedCompiledMain: null,
+            cachedCompiledSecondary: null,
+            isPlotReady: false,
+            isInternalRelayout: false
+        };
+
+        /* Curated Physics & Pure Math Presets */
+        const PRESETS = {
+            traveling_wave: {
+                mode: '2d',
+                eq: 'sin(a * x - t) * exp(-b * x^2)',
+                params: { a: 1.8, b: 0.25, c: 1.0, t: 0.0 },
+                tangentX: 0.5,
+                intA: -3, intB: 3,
+                yRange: [-2.0, 2.0]
+            },
+            gravity_field: {
+                mode: 'vector',
+                eq: '-a * x / ((x^2 + y^2 + 0.25)^1.5)',
+                secEq: '-a * y / ((x^2 + y^2 + 0.25)^1.5)',
+                params: { a: 2.5, b: 1.0, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -2, intB: 2,
+                yRange: [-4, 4]
+            },
+            spacetime_well: {
+                mode: '3d',
+                eq: '-a / (sqrt(x^2 + y^2) + 0.35) + 0.15 * cos(t)',
+                params: { a: 2.2, b: 1.0, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -2, intB: 2,
+                zRange: [-5, 1]
+            },
+            electric_dipole: {
+                mode: 'vector',
+                eq: 'a * ((x - 1.2)/((x - 1.2)^2 + y^2 + 0.15)^1.5 - (x + 1.2)/((x + 1.2)^2 + y^2 + 0.15)^1.5)',
+                secEq: 'a * (y / ((x - 1.2)^2 + y^2 + 0.15)^1.5 - y / ((x + 1.2)^2 + y^2 + 0.15)^1.5)',
+                params: { a: 2.2, b: 1.0, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -2, intB: 2,
+                yRange: [-4, 4]
+            },
+            standing_wave: {
+                mode: '2d',
+                eq: '2 * a * sin(b * x) * cos(t)',
+                params: { a: 1.2, b: 1.5, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -3, intB: 3,
+                yRange: [-2.8, 2.8]
+            },
+            damped_harmonic: {
+                mode: '2d',
+                eq: 'exp(-b * x) * cos(a * x - t)',
+                params: { a: 3.0, b: 0.2, c: 1.0, t: 0.0 },
+                tangentX: 1.5,
+                intA: 0, intB: 6,
+                yRange: [-2.5, 2.5]
+            },
+            saddle_3d: {
+                mode: '3d',
+                eq: 'x^2 / (a^2) - y^2 / (b^2)',
+                params: { a: 2.0, b: 2.0, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -2, intB: 2,
+                zRange: [-4, 4]
+            },
+            sombrero_3d: {
+                mode: '3d',
+                eq: 'sin(a * sqrt(x^2 + y^2) - t) / (sqrt(x^2 + y^2) + 0.1)',
+                params: { a: 2.2, b: 0.5, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -2, intB: 2,
+                zRange: [-2.5, 3.0]
+            },
+            riemann_integral: {
+                mode: 'integral',
+                eq: 'sin(a * x) + 0.3 * x^2',
+                params: { a: 1.5, b: 0.5, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -1.5, intB: 2.5,
+                yRange: [-2, 6]
+            },
+            tangent_curve: {
+                mode: 'calculus',
+                eq: 'x^3 - 3*x + a*sin(t)',
+                params: { a: 1.0, b: 0.5, c: 1.0, t: 0.0 },
+                tangentX: 0.8,
+                intA: -2, intB: 2,
+                yRange: [-4, 4]
+            },
+            polar_rose: {
+                mode: 'polar',
+                eq: 'cos(a * theta - t)',
+                params: { a: 4.0, b: 1.0, c: 1.0, t: 0.0 },
+                polarMaxR: 1.5,
+                thetaMax: 2 * Math.PI
+            },
+            cardioid: {
+                mode: 'polar',
+                eq: 'a * (1 - cos(theta - t))',
+                params: { a: 1.5, b: 1.0, c: 1.0, t: 0.0 },
+                polarMaxR: 3.5,
+                thetaMax: 2 * Math.PI
+            },
+            archimedes_spiral: {
+                mode: 'polar',
+                eq: '0.2 * a * theta + 0.1 * cos(t)',
+                params: { a: 1.0, b: 1.0, c: 1.0, t: 0.0 },
+                polarMaxR: 4.5,
+                thetaMax: 6 * Math.PI
+            },
+            vector_vortex: {
+                mode: 'vector',
+                eq: '-y / (sqrt(x^2 + y^2) + 0.2) + a*cos(t)',
+                secEq: 'x / (sqrt(x^2 + y^2) + 0.2)',
+                params: { a: 0.0, b: 1.0, c: 1.0, t: 0.0 },
+                tangentX: 1.0,
+                intA: -2, intB: 2,
+                yRange: [-4, 4]
+            }
+        };
+
+        function compileExpressions() {
+            if (!state.cachedCompiledMain) {
+                try {
+                    state.cachedCompiledMain = math.compile(state.equation);
+                } catch (e) {
+                    state.cachedCompiledMain = {
+                        evaluate: () => 0
+                    };
+                }
+            }
+
+            if (state.mode === 'vector' && !state.cachedCompiledSecondary) {
+                try {
+                    state.cachedCompiledSecondary = math.compile(state.secondaryEquation);
+                } catch (e) {
+                    state.cachedCompiledSecondary = {
+                        evaluate: () => 0
+                    };
+                }
+            }
+
+            return {
+                main: state.cachedCompiledMain,
+                secondary: state.cachedCompiledSecondary
+            };
+        }
+
+        function safeEval(compiledExpr, scope) {
+            try {
+                const val = compiledExpr.evaluate(scope);
+                if (typeof val === 'number' && isFinite(val)) {
+                    return val;
+                }
+                return null;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function updateLatexPreview() {
+            const previewEl = document.getElementById('katexPreviewArea');
+            if (!previewEl || typeof katex === 'undefined') return;
+
+            try {
+                let formulaStr = state.equation;
+                let parsed = math.parse(formulaStr);
+                let latexCode = parsed.toTex({ parenthesis: 'auto' });
+                katex.render(latexCode, previewEl, {
+                    throwOnError: false,
+                    displayMode: true
+                });
+            } catch (err) {
+                previewEl.textContent = state.equation;
+            }
+
+            const hudFormula = document.getElementById('canvasHUDFormula');
+            if (hudFormula) {
+                if (state.mode === 'polar') {
+                    hudFormula.textContent = `r(θ) = ${state.equation}`;
+                } else {
+                    hudFormula.textContent = `f = ${state.equation}`;
+                }
+            }
+        }
+
+        /* Polar Coordinate Traces Generation */
+        function generatePolarTraces(compiled, scope) {
+            const thetaMax = state.polarThetaMax || (2 * Math.PI);
+            const steps = 720;
+            const step = thetaMax / steps;
+
+            const rVals = [];
+            const thetaVals = [];
+
+            for (let i = 0; i <= steps; i++) {
+                const th = i * step;
+                scope.theta = th;
+                scope.th = th;
+                scope.x = th;
+                const r = safeEval(compiled, scope);
+                rVals.push(r !== null && !isNaN(r) ? r : null);
+                thetaVals.push(th);
+            }
+
+            return [{
+                type: 'scatterpolar',
+                r: rVals,
+                theta: thetaVals,
+                thetaunit: 'radians',
+                mode: 'lines',
+                name: 'r(θ)',
+                line: {
+                    color: '#f43f5e',
+                    width: 2.8
+                },
+                fill: 'toself',
+                fillcolor: 'rgba(244, 63, 94, 0.08)'
+            }];
+        }
+
+        /* 2D Curve Traces Generation */
+        function generate2DTraces(compiled, scope) {
+            const minX = state.domain.min;
+            const maxX = state.domain.max;
+            const step = (maxX - minX) / state.samples;
+
+            const xVals = [];
+            const yVals = [];
+
+            for (let i = 0; i <= state.samples; i++) {
+                const x = minX + i * step;
+                scope.x = x;
+                const y = safeEval(compiled, scope);
+                xVals.push(x);
+                yVals.push(y);
+            }
+
+            const mainTrace = {
+                x: xVals,
+                y: yVals,
+                mode: 'lines',
+                type: 'scatter',
+                name: 'f(x)',
+                line: {
+                    color: '#38bdf8',
+                    width: 3.0
+                }
+            };
+
+            const traces = [mainTrace];
+
+            // Calculus Tangent Line Mode
+            if (state.mode === 'calculus') {
+                const x0 = state.tangentX;
+                const h = 0.001;
+                scope.x = x0;
+                const y0 = safeEval(compiled, scope) || 0;
+
+                scope.x = x0 + h;
+                const yPlus = safeEval(compiled, scope) || 0;
+                scope.x = x0 - h;
+                const yMinus = safeEval(compiled, scope) || 0;
+
+                const slope = (yPlus - yMinus) / (2 * h);
+                const secondDeriv = (yPlus - 2 * y0 + yMinus) / (h * h);
+                const curvature = Math.abs(secondDeriv) / Math.pow(1 + slope * slope, 1.5);
+
+                const slopeEl = document.getElementById('tangentSlopeVal');
+                const curvEl = document.getElementById('tangentCurvatureVal');
+                if (slopeEl) slopeEl.textContent = slope.toFixed(4);
+                if (curvEl) curvEl.textContent = curvature.toFixed(4);
+
+                const span = 3.0;
+                traces.push({
+                    x: [x0 - span, x0 + span],
+                    y: [y0 - slope * span, y0 + slope * span],
+                    mode: 'lines',
+                    type: 'scatter',
+                    name: 'Tangent Line',
+                    line: { color: '#34d399', width: 2.0, dash: 'dash' }
+                });
+
+                traces.push({
+                    x: [x0],
+                    y: [y0],
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: '(x₀, y₀)',
+                    marker: { color: '#10b981', size: 10 }
+                });
+            }
+
+            // Definite Integral Area Mode
+            if (state.mode === 'integral') {
+                const a = state.integralBounds.a;
+                const b = state.integralBounds.b;
+                const intSteps = 120;
+                const intStep = (b - a) / intSteps;
+
+                const intX = [];
+                const intY = [];
+                let totalArea = 0;
+
+                for (let i = 0; i <= intSteps; i++) {
+                    const xi = a + i * intStep;
+                    scope.x = xi;
+                    const yi = safeEval(compiled, scope) || 0;
+                    intX.push(xi);
+                    intY.push(yi);
+
+                    if (i > 0) {
+                        const prevX = a + (i - 1) * intStep;
+                        scope.x = prevX;
+                        const prevY = safeEval(compiled, scope) || 0;
+                        totalArea += ((yi + prevY) / 2) * intStep;
+                    }
+                }
+
+                const resultEl = document.getElementById('integralResultVal');
+                if (resultEl) resultEl.textContent = totalArea.toFixed(4);
+
+                traces.push({
+                    x: intX,
+                    y: intY,
+                    fill: 'tozeroy',
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: '∫ f(x) dx',
+                    fillcolor: 'rgba(99, 102, 241, 0.35)',
+                    line: { color: '#818cf8', width: 2.0 }
+                });
+            }
+
+            return traces;
+        }
+
+        /* 3D Mesh Surface Traces */
+        function generate3DSurfaceTraces(compiled, scope) {
+            const gridRes = 38;
+            const minCoord = -4.0;
+            const maxCoord = 4.0;
+            const step = (maxCoord - minCoord) / (gridRes - 1);
+
+            const xGrid = [];
+            const yGrid = [];
+            const zGrid = [];
+
+            for (let i = 0; i < gridRes; i++) {
+                xGrid.push(minCoord + i * step);
+                yGrid.push(minCoord + i * step);
+            }
+
+            for (let j = 0; j < gridRes; j++) {
+                const row = [];
+                const yVal = yGrid[j];
+                scope.y = yVal;
+
+                for (let i = 0; i < gridRes; i++) {
+                    const xVal = xGrid[i];
+                    scope.x = xVal;
+                    let z = safeEval(compiled, scope);
+                    if (z === null || isNaN(z)) z = 0;
+                    z = Math.max(-6.0, Math.min(6.0, z));
+                    row.push(z);
+                }
+                zGrid.push(row);
+            }
+
+            return [{
+                type: 'surface',
+                x: xGrid,
+                y: yGrid,
+                z: zGrid,
+                colorscale: 'Viridis',
+                showscale: false,
+                lighting: { ambient: 0.65, diffuse: 0.8, specular: 0.5 },
+                contours: {
+                    z: { show: true, usecolormap: true, highlightcolor: '#38bdf8', project: { z: true } }
+                }
+            }];
+        }
+
+        /* Vector Field Traces with Sharp Directional Arrowheads */
+        function generateVectorFieldTraces(compFx, compFy, scope) {
+            const gridPoints = 14;
+            const minCoord = -3.8;
+            const maxCoord = 3.8;
+            const step = (maxCoord - minCoord) / (gridPoints - 1);
+
+            const xLines = [];
+            const yLines = [];
+
+            for (let i = 0; i < gridPoints; i++) {
+                const x0 = minCoord + i * step;
+                scope.x = x0;
+
+                for (let j = 0; j < gridPoints; j++) {
+                    const y0 = minCoord + j * step;
+                    scope.y = y0;
+
+                    const u = safeEval(compFx, scope);
+                    const v = safeEval(compFy, scope);
+
+                    if (u === null || v === null) continue;
+
+                    const mag = Math.sqrt(u * u + v * v);
+                    if (mag < 1e-6) continue;
+
+                    // Fixed scale for visual arrow shafts
+                    const scale = 0.38;
+                    const ux = u / mag;
+                    const uy = v / mag;
+                    const dx = ux * scale;
+                    const dy = uy * scale;
+
+                    const x1 = x0 + dx;
+                    const y1 = y0 + dy;
+
+                    // Compute directional arrowhead barbs pointing back from tip (x1, y1)
+                    const headLen = scale * 0.38;
+                    const headWidth = scale * 0.22;
+
+                    const xLeft = x1 - headLen * ux - headWidth * uy;
+                    const yLeft = y1 - headLen * uy + headWidth * ux;
+
+                    const xRight = x1 - headLen * ux + headWidth * uy;
+                    const yRight = y1 - headLen * uy - headWidth * ux;
+
+                    // Main vector line shaft
+                    xLines.push(x0, x1, null);
+                    yLines.push(y0, y1, null);
+
+                    // Directional arrowhead barb lines
+                    xLines.push(xLeft, x1, xRight, null);
+                    yLines.push(yLeft, y1, yRight, null);
+                }
+            }
+
+            return [{
+                type: 'scatter',
+                mode: 'lines',
+                x: xLines,
+                y: yLines,
+                line: { color: '#38bdf8', width: 2.0 },
+                name: 'Vector Field F(x,y)'
+            }];
+        }
+
+        /* Primary Plot Execution with Locked Axes */
+        function triggerPlot() {
+            const plotElem = document.getElementById('plotContainer');
+            if (!plotElem) return;
+
+            // Dismiss initial loading spinner
+            const loader = document.getElementById('plotLoaderSpinner');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 250);
+            }
+
+            if (typeof Plotly === 'undefined') {
+                setTimeout(triggerPlot, 200);
+                return;
+            }
+
+            const comp = compileExpressions();
+            const scope = {
+                a: state.params.a,
+                b: state.params.b,
+                c: state.params.c,
+                t: state.params.t,
+                pi: Math.PI,
+                e: Math.E
+            };
+
+            let traces = [];
+
+            // Common Plot Layout Configuration
+            // Note: uirevision guarantees the user's camera/zoom and axes DO NOT reset or jitter during animation
+            const commonLayout = {
+                autosize: true,
+                uirevision: 'fixed_axes_constant',
+                paper_bgcolor: 'rgba(8, 12, 22, 1)',
+                plot_bgcolor: 'rgba(8, 12, 22, 1)',
+                font: { family: 'Fira Code, monospace', color: '#94a3b8' },
+                margin: { l: 45, r: 20, t: 25, b: 45, pad: 0 },
+                showlegend: true,
+                dragmode: state.dragMode,
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(12, 18, 34, 0.85)',
+                    bordercolor: '#233258',
+                    borderwidth: 1,
+                    font: { size: 10, color: '#e2e8f0' }
+                }
+            };
+
+            const plotConfig = {
+                responsive: true,
+                displayModeBar: false,
+                scrollZoom: true
+            };
+
+            try {
+                if (state.mode === '3d') {
+                    traces = generate3DSurfaceTraces(comp.main, scope);
+                    const layout3D = Object.assign({}, commonLayout, {
+                        margin: { l: 0, r: 0, t: 0, b: 0, pad: 0 },
+                        dragmode: false,
+                        scene: {
+                            xaxis: { title: 'X', gridcolor: '#1e293b', zerolinecolor: '#38bdf8', range: [-4, 4], autorange: false },
+                            yaxis: { title: 'Y', gridcolor: '#1e293b', zerolinecolor: '#38bdf8', range: [-4, 4], autorange: false },
+                            zaxis: { title: 'Z', gridcolor: '#1e293b', zerolinecolor: '#38bdf8', range: state.zDomain || [-3, 3], autorange: false },
+                            aspectmode: 'manual',
+                            aspectratio: { x: 1, y: 1, z: 0.75 },
+                            bgcolor: 'rgba(8, 12, 22, 1)',
+                            dragmode: state.scene3DDragMode || 'orbit',
+                            camera: state.camera3D || { eye: { x: 1.55, y: 1.55, z: 1.25 } }
+                        }
+                    });
+
+                    state.isInternalRelayout = true;
+                    if (!state.isPlotReady) {
+                        Plotly.newPlot(plotElem, traces, layout3D, plotConfig).then(() => {
+                            state.isPlotReady = true;
+                            attachPlotEventHandlers();
+                            Plotly.Plots.resize(plotElem);
+                            state.isInternalRelayout = false;
+                        });
+                    } else {
+                        Plotly.react(plotElem, traces, layout3D, plotConfig).then(() => {
+                            state.isInternalRelayout = false;
+                        });
+                    }
+                } else if (state.mode === 'vector') {
+                    traces = generateVectorFieldTraces(comp.main, comp.secondary, scope);
+                    const layoutVector = Object.assign({}, commonLayout, {
+                        xaxis: { 
+                            title: 'X', 
+                            gridcolor: '#1e293b', 
+                            zerolinecolor: '#38bdf8', 
+                            range: state.currentViewRange?.x || [-4, 4], 
+                            autorange: false 
+                        },
+                        yaxis: { 
+                            title: 'Y', 
+                            gridcolor: '#1e293b', 
+                            zerolinecolor: '#38bdf8', 
+                            range: state.currentViewRange?.y || [-4, 4], 
+                            autorange: false 
+                        }
+                    });
+
+                    state.isInternalRelayout = true;
+                    if (!state.isPlotReady) {
+                        Plotly.newPlot(plotElem, traces, layoutVector, plotConfig).then(() => {
+                            state.isPlotReady = true;
+                            attachPlotEventHandlers();
+                            Plotly.Plots.resize(plotElem);
+                            state.isInternalRelayout = false;
+                        });
+                    } else {
+                        Plotly.react(plotElem, traces, layoutVector, plotConfig).then(() => {
+                            state.isInternalRelayout = false;
+                        });
+                    }
+                } else if (state.mode === 'polar') {
+                    traces = generatePolarTraces(comp.main, scope);
+                    const layoutPolar = Object.assign({}, commonLayout, {
+                        polar: {
+                            radialaxis: {
+                                visible: true,
+                                range: [0, state.polarMaxR || 3.0],
+                                autorange: false,
+                                gridcolor: '#1e293b',
+                                linecolor: '#f43f5e',
+                                tickfont: { color: '#94a3b8', size: 9 },
+                                angle: 45
+                            },
+                            angularaxis: {
+                                gridcolor: '#1e293b',
+                                linecolor: '#38bdf8',
+                                tickfont: { color: '#94a3b8', size: 10 },
+                                direction: 'counterclockwise',
+                                rotation: 0
+                            },
+                            bgcolor: 'rgba(8, 12, 22, 1)'
+                        }
+                    });
+
+                    state.isInternalRelayout = true;
+                    if (!state.isPlotReady) {
+                        Plotly.newPlot(plotElem, traces, layoutPolar, plotConfig).then(() => {
+                            state.isPlotReady = true;
+                            attachPlotEventHandlers();
+                            Plotly.Plots.resize(plotElem);
+                            state.isInternalRelayout = false;
+                        });
+                    } else {
+                        Plotly.react(plotElem, traces, layoutPolar, plotConfig).then(() => {
+                            state.isInternalRelayout = false;
+                        });
+                    }
+                } else {
+                    traces = generate2DTraces(comp.main, scope);
+                    // Rock-Solid Fixed Range Axes for 2D Animation
+                    const layout2D = Object.assign({}, commonLayout, {
+                        xaxis: { 
+                            title: 'x', 
+                            gridcolor: '#1e293b', 
+                            zerolinecolor: '#38bdf8',
+                            range: state.currentViewRange?.x || [state.domain.min, state.domain.max],
+                            autorange: false
+                        },
+                        yaxis: { 
+                            title: 'f(x)', 
+                            gridcolor: '#1e293b', 
+                            zerolinecolor: '#38bdf8',
+                            range: state.currentViewRange?.y || state.yDomain || [-2.5, 2.5],
+                            autorange: false
+                        }
+                    });
+
+                    state.isInternalRelayout = true;
+                    if (!state.isPlotReady) {
+                        Plotly.newPlot(plotElem, traces, layout2D, plotConfig).then(() => {
+                            state.isPlotReady = true;
+                            attachPlotEventHandlers();
+                            Plotly.Plots.resize(plotElem);
+                            state.isInternalRelayout = false;
+                        });
+                    } else {
+                        Plotly.react(plotElem, traces, layout2D, plotConfig).then(() => {
+                            state.isInternalRelayout = false;
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Plot error:", err);
+            }
+        }
+
+        let hasAttachedEvents = false;
+        function attachPlotEventHandlers() {
+            if (hasAttachedEvents) return;
+            const plotElem = document.getElementById('plotContainer');
+            if (!plotElem) return;
+
+            plotElem.on('plotly_relayout', function(eventData) {
+                if (state.isInternalRelayout) return;
+
+                if (eventData['scene.camera']) {
+                    state.camera3D = eventData['scene.camera'];
+                }
+
+                if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
+                    state.currentViewRange = {
+                        x: [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']],
+                        y: [eventData['yaxis.range[0]'], eventData['yaxis.range[1]']]
+                    };
+                    state.isCustomZoomed = true;
+                }
+            });
+
+            hasAttachedEvents = true;
+        }
+
+        function loadSelectedPreset(presetKey) {
+            const preset = PRESETS[presetKey];
+            if (!preset) return;
+
+            // Sync select values in sidebar and header
+            const sidebarSelect = document.getElementById('presetSelector');
+            const headerSelect = document.getElementById('headerPresetSelect');
+            if (sidebarSelect) sidebarSelect.value = presetKey;
+            if (headerSelect) headerSelect.value = presetKey;
+
+            setGraphMode(preset.mode, false);
+
+            state.equation = preset.eq;
+            const primInput = document.getElementById('primaryEquationInput');
+            if (primInput) primInput.value = preset.eq;
+
+            if (preset.secEq) {
+                state.secondaryEquation = preset.secEq;
+                const secInput = document.getElementById('secondaryEquationInput');
+                if (secInput) secInput.value = preset.secEq;
+            }
+
+            state.cachedCompiledMain = null;
+            state.cachedCompiledSecondary = null;
+
+            // Load preset parameters
+            for (let p in preset.params) {
+                state.params[p] = preset.params[p];
+                const slider = document.getElementById(`slider_${p}`);
+                const numBox = document.getElementById(`num_${p}`);
+                if (slider) slider.value = preset.params[p];
+                if (numBox) numBox.value = preset.params[p];
+            }
+
+            if (preset.tangentX !== undefined) {
+                state.tangentX = preset.tangentX;
+                const ts = document.getElementById('tangentSlider');
+                if (ts) ts.value = preset.tangentX;
+            }
+
+            if (preset.intA !== undefined) {
+                state.integralBounds.a = preset.intA;
+                state.integralBounds.b = preset.intB;
+                const ia = document.getElementById('integralBoundA');
+                const ib = document.getElementById('integralBoundB');
+                if (ia) ia.value = preset.intA;
+                if (ib) ib.value = preset.intB;
+            }
+
+            if (preset.yRange) {
+                state.yDomain = preset.yRange.slice();
+            } else {
+                state.yDomain = [-2.5, 2.5];
+            }
+
+            if (preset.zRange) {
+                state.zDomain = preset.zRange.slice();
+            } else {
+                state.zDomain = [-3, 3];
+            }
+
+            if (preset.polarMaxR !== undefined) {
+                state.polarMaxR = preset.polarMaxR;
+                const radSlider = document.getElementById('polarRadiusSlider');
+                const radVal = document.getElementById('polarRadiusVal');
+                if (radSlider) radSlider.value = preset.polarMaxR;
+                if (radVal) radVal.textContent = preset.polarMaxR.toFixed(2);
+            }
+
+            if (preset.thetaMax !== undefined) {
+                setPolarThetaMax(preset.thetaMax);
+            }
+
+            state.currentViewRange = null;
+            state.isCustomZoomed = false;
+
+            updateLatexPreview();
+            state.isPlotReady = false;
+            triggerPlot();
+            showToast(`Loaded Preset: ${presetKey.replace('_', ' ')}`);
+        }
+
+        function setGraphMode(mode, doPlot = true) {
+            state.mode = mode;
+
+            const tabs = ['2d', '3d', 'polar', 'calculus', 'integral', 'vector'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    if (t === mode) {
+                        btn.className = "py-1.5 rounded-lg text-xs font-mono transition-colors bg-cyan-500 text-navy-950 font-bold shadow-sm";
+                    } else {
+                        btn.className = "py-1.5 rounded-lg text-xs font-mono transition-colors text-slate-400 hover:text-slate-200";
+                    }
+                }
+            });
+
+            const secContainer = document.getElementById('secondaryEquationContainer');
+            const toolbar3D = document.getElementById('toolbar3DControls');
+            const calcCard = document.getElementById('calculusControlsCard');
+            const intCard = document.getElementById('integralControlsCard');
+            const polarCard = document.getElementById('polarControlsCard');
+            const eqLabel = document.getElementById('equationInputLabel');
+
+            if (secContainer) secContainer.classList.toggle('hidden', mode !== 'vector');
+            if (toolbar3D) toolbar3D.classList.toggle('hidden', mode !== '3d');
+            if (calcCard) calcCard.classList.toggle('hidden', mode !== 'calculus');
+            if (intCard) intCard.classList.toggle('hidden', mode !== 'integral');
+            if (polarCard) polarCard.classList.toggle('hidden', mode !== 'polar');
+
+            if (eqLabel) {
+                if (mode === '3d') eqLabel.innerHTML = '<span class="w-2 h-2 rounded-full bg-purple-400"></span> z(x, y) =';
+                else if (mode === 'vector') eqLabel.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400"></span> F_x(x, y) =';
+                else if (mode === 'polar') eqLabel.innerHTML = '<span class="w-2 h-2 rounded-full bg-pink-400"></span> r(θ) =';
+                else eqLabel.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400"></span> f(x) =';
+            }
+
+            if (doPlot) {
+                state.isPlotReady = false;
+                triggerPlot();
+            }
+        }
+
+        function setPolarThetaMax(val) {
+            state.polarThetaMax = val;
+            const valEl = document.getElementById('polarThetaVal');
+            if (valEl) {
+                const factor = (val / Math.PI).toFixed(0);
+                valEl.textContent = `${factor === '1' ? '' : factor}π (${(val * 180 / Math.PI).toFixed(0)}°)`;
+            }
+            ['Pi', '2Pi', '4Pi', '6Pi'].forEach(p => {
+                const btn = document.getElementById(`polarSpan${p}`);
+                if (btn) btn.className = "py-1 px-1 text-[10px] font-mono rounded bg-slate-800 text-slate-300";
+            });
+            let activeId = 'polarSpan2Pi';
+            if (Math.abs(val - Math.PI) < 0.01) activeId = 'polarSpanPi';
+            else if (Math.abs(val - 2 * Math.PI) < 0.01) activeId = 'polarSpan2Pi';
+            else if (Math.abs(val - 4 * Math.PI) < 0.01) activeId = 'polarSpan4Pi';
+            else if (Math.abs(val - 6 * Math.PI) < 0.01) activeId = 'polarSpan6Pi';
+            const activeBtn = document.getElementById(activeId);
+            if (activeBtn) activeBtn.className = "py-1 px-1 text-[10px] font-mono rounded bg-pink-500 text-navy-950 font-bold";
+            triggerPlot();
+        }
+
+        function updatePolarRadius(val) {
+            state.polarMaxR = parseFloat(val);
+            const valEl = document.getElementById('polarRadiusVal');
+            if (valEl) valEl.textContent = state.polarMaxR.toFixed(2);
+            Plotly.relayout('plotContainer', { 'polar.radialaxis.range': [0, state.polarMaxR] });
+        }
+
+        function toggleAnimation() {
+            state.animation.running = !state.animation.running;
+
+            const masterBtn = document.getElementById('masterAnimBtn');
+            const playIcon = document.getElementById('animPlayIcon');
+            const btnText = document.getElementById('animBtnText');
+
+            if (state.animation.running) {
+                if (masterBtn) {
+                    masterBtn.classList.remove('bg-cyan-500', 'text-navy-950');
+                    masterBtn.classList.add('bg-amber-400', 'text-navy-950');
+                }
+                if (playIcon) playIcon.setAttribute('data-lucide', 'pause');
+                if (btnText) btnText.textContent = 'Pause (t)';
+                showToast("Animation started (Axes locked)");
+                runAnimationFrame();
+            } else {
+                if (masterBtn) {
+                    masterBtn.classList.remove('bg-amber-400', 'text-navy-950');
+                    masterBtn.classList.add('bg-cyan-500', 'text-navy-950');
+                }
+                if (playIcon) playIcon.setAttribute('data-lucide', 'play');
+                if (btnText) btnText.textContent = 'Animate (t)';
+                if (state.animation.animFrameId) {
+                    cancelAnimationFrame(state.animation.animFrameId);
+                }
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function runAnimationFrame() {
+            if (!state.animation.running) return;
+
+            const dt = 0.035 * state.animation.speed;
+            state.params.t = (state.params.t + dt) % 25.0;
+
+            const sliderT = document.getElementById('slider_t');
+            const numT = document.getElementById('num_t');
+            if (sliderT) sliderT.value = state.params.t.toFixed(2);
+            if (numT) numT.value = state.params.t.toFixed(2);
+
+            triggerPlot();
+            state.animation.animFrameId = requestAnimationFrame(runAnimationFrame);
+        }
+
+        function updateParamFromSlider(param, val) {
+            const num = parseFloat(val);
+            state.params[param] = num;
+            const numBox = document.getElementById(`num_${param}`);
+            if (numBox) numBox.value = num;
+
+            if (param === 'a') {
+                const mobSlider = document.getElementById('mobile_slider_a');
+                if (mobSlider) mobSlider.value = num;
+            }
+
+            triggerPlot();
+        }
+
+        function updateParamFromNumber(param, val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return;
+            state.params[param] = num;
+            const slider = document.getElementById(`slider_${param}`);
+            if (slider) slider.value = num;
+            triggerPlot();
+        }
+
+        function setAnimSpeed(spd) {
+            state.animation.speed = spd;
+            ['05', '10', '20'].forEach(s => {
+                const btn = document.getElementById(`speed${s}`);
+                if (btn) {
+                    btn.className = "px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300";
+                }
+            });
+            const activeId = spd === 0.5 ? 'speed05' : (spd === 1.0 ? 'speed10' : 'speed20');
+            const activeBtn = document.getElementById(activeId);
+            if (activeBtn) {
+                activeBtn.className = "px-2 py-0.5 rounded bg-cyan-500 text-navy-950 font-bold";
+            }
+        }
+
+        function resetTimeParam() {
+            state.params.t = 0.0;
+            const sliderT = document.getElementById('slider_t');
+            const numT = document.getElementById('num_t');
+            if (sliderT) sliderT.value = '0';
+            if (numT) numT.value = '0';
+            triggerPlot();
+        }
+
+        function set3DViewPreset(preset) {
+            const cameras = {
+                iso: { eye: { x: 1.55, y: 1.55, z: 1.25 } },
+                top: { eye: { x: 0, y: 0.001, z: 2.5 } },
+                front: { eye: { x: 0, y: -2.5, z: 0.1 } },
+                side: { eye: { x: 2.5, y: 0, z: 0.1 } }
+            };
+
+            if (cameras[preset]) {
+                state.camera3D = cameras[preset];
+                Plotly.relayout('plotContainer', { 'scene.camera': state.camera3D });
+                showToast(`3D Camera: ${preset.toUpperCase()}`);
+            }
+        }
+
+        function toggle3DAutoRotate() {
+            state.autoRotate3D = !state.autoRotate3D;
+            const btn = document.getElementById('autoSpinBtn');
+
+            if (state.autoRotate3D) {
+                if (btn) btn.classList.add('bg-purple-600', 'text-white');
+                run3DAutoRotate();
+            } else {
+                if (btn) btn.classList.remove('bg-purple-600', 'text-white');
+                if (state.autoRotateAnimId) cancelAnimationFrame(state.autoRotateAnimId);
+            }
+        }
+
+        function run3DAutoRotate() {
+            if (!state.autoRotate3D) return;
+
+            state.autoRotateAngle += 0.015;
+            const r = state.autoRotateRadius;
+            state.camera3D = {
+                eye: {
+                    x: r * Math.cos(state.autoRotateAngle),
+                    y: r * Math.sin(state.autoRotateAngle),
+                    z: 1.2
+                },
+                up: { x: 0, y: 0, z: 1 },
+                center: { x: 0, y: 0, z: 0 }
+            };
+
+            Plotly.relayout('plotContainer', { 'scene.camera': state.camera3D });
+            state.autoRotateAnimId = requestAnimationFrame(run3DAutoRotate);
+        }
+
+        function handleZoomCanvas(factor) {
+            if (state.mode === '3d') {
+                if (state.camera3D && state.camera3D.eye) {
+                    state.camera3D.eye.x *= factor;
+                    state.camera3D.eye.y *= factor;
+                    state.camera3D.eye.z *= factor;
+                    Plotly.relayout('plotContainer', { 'scene.camera': state.camera3D });
+                }
+                return;
+            }
+
+            if (state.mode === 'polar') {
+                state.polarMaxR = Math.max(0.2, (state.polarMaxR || 3.0) * factor);
+                const radSlider = document.getElementById('polarRadiusSlider');
+                const radVal = document.getElementById('polarRadiusVal');
+                if (radSlider) radSlider.value = state.polarMaxR.toFixed(2);
+                if (radVal) radVal.textContent = state.polarMaxR.toFixed(2);
+                Plotly.relayout('plotContainer', { 'polar.radialaxis.range': [0, state.polarMaxR] });
+                return;
+            }
+
+            const currentX = state.currentViewRange?.x || [state.domain.min, state.domain.max];
+            const currentY = state.currentViewRange?.y || state.yDomain || [-2.5, 2.5];
+
+            const cx = (currentX[0] + currentX[1]) / 2;
+            const spanX = (currentX[1] - currentX[0]) * factor;
+
+            const cy = (currentY[0] + currentY[1]) / 2;
+            const spanY = (currentY[1] - currentY[0]) * factor;
+
+            state.currentViewRange = {
+                x: [cx - spanX / 2, cx + spanX / 2],
+                y: [cy - spanY / 2, cy + spanY / 2]
+            };
+            state.isCustomZoomed = true;
+
+            Plotly.relayout('plotContainer', {
+                'xaxis.range': state.currentViewRange.x,
+                'yaxis.range': state.currentViewRange.y
+            });
+        }
+
+        function resetPlotCamera() {
+            state.isCustomZoomed = false;
+            state.currentViewRange = null;
+
+            if (state.mode === '3d') {
+                set3DViewPreset('iso');
+            } else if (state.mode === 'polar') {
+                state.polarMaxR = 3.0;
+                const radSlider = document.getElementById('polarRadiusSlider');
+                const radVal = document.getElementById('polarRadiusVal');
+                if (radSlider) radSlider.value = '3.0';
+                if (radVal) radVal.textContent = '3.00';
+                Plotly.relayout('plotContainer', { 'polar.radialaxis.range': [0, 3.0] });
+                showToast("Polar radial scale reset");
+            } else {
+                Plotly.relayout('plotContainer', {
+                    'xaxis.range': [state.domain.min, state.domain.max],
+                    'yaxis.range': state.yDomain || [-2.5, 2.5]
+                });
+            }
+
+            showToast("Coordinate axes reset to default limits");
+        }
+
+        function togglePanMode() {
+            state.dragMode = state.dragMode === 'pan' ? 'zoom' : 'pan';
+            const btn = document.getElementById('panToggleBtn');
+            if (btn) {
+                btn.classList.toggle('text-cyan-400', state.dragMode === 'pan');
+            }
+            Plotly.relayout('plotContainer', { dragmode: state.dragMode });
+            showToast(`Mode: ${state.dragMode.toUpperCase()}`);
+        }
+
+        function updateTangentX(val) {
+            state.tangentX = parseFloat(val);
+            const valEl = document.getElementById('tangentPointVal');
+            if (valEl) valEl.textContent = state.tangentX.toFixed(2);
+            triggerPlot();
+        }
+
+        function updateIntegralBounds() {
+            const aVal = parseFloat(document.getElementById('integralBoundA').value);
+            const bVal = parseFloat(document.getElementById('integralBoundB').value);
+            if (!isNaN(aVal)) state.integralBounds.a = aVal;
+            if (!isNaN(bVal)) state.integralBounds.b = bVal;
+            triggerPlot();
+        }
+
+        function handleEquationChange() {
+            const val = document.getElementById('primaryEquationInput').value;
+            state.equation = val;
+            state.cachedCompiledMain = null;
+
+            if (state.mode === 'vector') {
+                const secVal = document.getElementById('secondaryEquationInput').value;
+                state.secondaryEquation = secVal;
+                state.cachedCompiledSecondary = null;
+            }
+
+            updateLatexPreview();
+        }
+
+        function insertSymbol(sym) {
+            const input = document.getElementById('primaryEquationInput');
+            if (!input) return;
+            const start = input.selectionStart || input.value.length;
+            const end = input.selectionEnd || input.value.length;
+            const text = input.value;
+            input.value = text.substring(0, start) + sym + text.substring(end);
+            input.focus();
+            input.selectionStart = input.selectionEnd = start + sym.length;
+            handleEquationChange();
+        }
+
+        function applyAndPlot() {
+            handleEquationChange();
+            state.isPlotReady = false;
+            triggerPlot();
+            showToast("Calculated & rendered graph");
+            if (window.innerWidth < 768) {
+                setMobileView('graph');
+            }
+        }
+
+        function setMobileView(view) {
+            const sidebar = document.getElementById('controlsSidebar');
+            const tabEqu = document.getElementById('viewTabEqu');
+            const tabGraph = document.getElementById('viewTabGraph');
+
+            if (view === 'equ') {
+                if (sidebar) sidebar.classList.remove('hidden');
+                if (tabEqu) tabEqu.className = "px-3 py-1 text-xs font-mono rounded-lg transition-all bg-cyan-500 text-navy-950 font-bold shadow-sm";
+                if (tabGraph) tabGraph.className = "px-3 py-1 text-xs font-mono rounded-lg transition-all text-slate-300 font-medium";
+            } else {
+                if (sidebar) sidebar.classList.add('hidden');
+                if (tabGraph) tabGraph.className = "px-3 py-1 text-xs font-mono rounded-lg transition-all bg-cyan-500 text-navy-950 font-bold shadow-sm";
+                if (tabEqu) tabEqu.className = "px-3 py-1 text-xs font-mono rounded-lg transition-all text-slate-300 font-medium";
+                setTimeout(() => {
+                    Plotly.Plots.resize(document.getElementById('plotContainer'));
+                }, 50);
+            }
+        }
+
+        function toggleHelpModal() {
+            const modal = document.getElementById('mathHelpModal');
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function exportGraphHighRes() {
+            const plotElem = document.getElementById('plotContainer');
+            if (!plotElem) return;
+
+            Plotly.downloadImage(plotElem, {
+                format: 'png',
+                width: 1920,
+                height: 1080,
+                filename: `MathVerse_${state.mode}_Graph`
+            });
+            showToast("Exporting high-resolution PNG");
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = "toast bg-navy-900 border border-cyan-500/40 text-cyan-300 px-3.5 py-2 rounded-xl text-xs font-mono shadow-2xl flex items-center gap-2 pointer-events-auto";
+            toast.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5 text-cyan-400"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            if (window.lucide) lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2400);
+        }
+
+        window.addEventListener('load', () => {
+            if (window.lucide) lucide.createIcons();
+            updateLatexPreview();
+            setTimeout(triggerPlot, 100);
+
+            // Responsive auto-resize observer
+            const wrapper = document.getElementById('plotContainerWrapper');
+            if (wrapper && window.ResizeObserver) {
+                const ro = new ResizeObserver(() => {
+                    const plotElem = document.getElementById('plotContainer');
+                    if (plotElem && typeof Plotly !== 'undefined') {
+                        Plotly.Plots.resize(plotElem);
+                    }
+                });
+                ro.observe(wrapper);
+            }
+        });
+    </script>
+</body>
+</html>
